@@ -271,3 +271,159 @@ CleanPro demonstrates a complete Laravel full-stack implementation, combining ba
 ---
 
 ✨ *Built with Laravel & determination*
+
+🎯 ROADMAP CHECKPOINT VERSI NILAI MAKSIMAL
+✅ CHECKPOINT 1 — Setup Project + DB
+
+(sudah selesai)
+
+Isi:
+
+Laravel install
+database connect
+migrate jalan
+
+Commit:
+
+initial laravel setup and database configuration
+✅ CHECKPOINT 2 — Authentication (WAJIB)
+
+Isi:
+
+login
+register
+logout
+forgot password (kalau Breeze support)
+
+Commit:
+
+setup authentication using laravel breeze
+
+🔥 Ini wajib banget.
+
+✅ CHECKPOINT 3 — Role & Authorization (WAJIB)
+
+Isi:
+
+admin
+staff/customer
+middleware route protect
+redirect sesuai role
+
+Commit:
+
+implement role based authorization system
+✅ CHECKPOINT 4 — 3 CRUD Minimal (WAJIB BESAR)
+
+Isi:
+
+CRUD 1:
+
+Services
+
+CRUD 2:
+
+Customers
+
+CRUD 3:
+
+Orders
+
+Commit:
+
+implement core CRUD modules for services customers and orders
+
+🔥 Ini langsung memenuhi syarat besar.
+
+✅ CHECKPOINT 5 — Validasi + Flash Message (WAJIB)
+
+Isi:
+
+required fields
+old input
+success alert
+error alert
+
+Commit:
+
+add form validation and flash messages
+✅ CHECKPOINT 6 — Search + Filter + Pagination (WAJIB)
+
+Isi:
+
+search customer
+filter status order
+paginate 10/page
+
+Commit:
+
+implement search filter and pagination features
+✅ CHECKPOINT 7 — Laundry Core Logic (PAKET KHUSUS)
+
+Isi:
+
+hitung total harga
+berat × layanan
+estimasi
+
+Commit:
+
+implement laundry pricing and calculation logic
+✅ CHECKPOINT 8 — Workflow Status System (PAKET KHUSUS)
+
+Isi:
+
+Received → Washing → Drying → Ironing → Ready → Completed
+
+Commit:
+
+implement laundry workflow status management
+✅ CHECKPOINT 9 — Status History Tracking
+
+Isi:
+
+log perubahan status
+
+Commit:
+
+add status history tracking for orders
+✅ CHECKPOINT 10 — Upload Feature (WAJIB)
+
+Isi:
+
+upload bukti pembayaran / foto item
+
+Commit:
+
+implement file upload feature for orders
+✅ CHECKPOINT 11 — Export Report (WAJIB)
+
+Isi:
+
+export PDF / Excel transaksi
+
+Commit:
+
+add report export to pdf or excel
+✅ CHECKPOINT 12 — Responsive UI
+
+Isi:
+
+mobile
+tablet
+desktop
+
+Commit:
+
+improve responsive user interface
+✅ CHECKPOINT 13 — Seeder + README
+
+Isi:
+
+admin default
+dummy data
+dokumentasi
+
+Commit:
+
+add seeders and complete project documentation
