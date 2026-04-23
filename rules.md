@@ -1,3 +1,35 @@
+# Sistem Manajemen Laundry (CleanPro)
+
+### 📄 Latar Belakang
+Usaha laundry 'BersihCepat' di sekitar Grendeng ingin sistem digital untuk mencatat order, melacak status pengerjaan, dan menghitung estimasi selesai otomatis berdasarkan layanan yang dipilih pelanggan.
+
+### 🎯 Tujuan Pembelajaran Spesifik
+Mahasiswa memahami harga dinamis berbasis berat + layanan, workflow multi-status, dan perhitungan estimasi waktu selesai.
+
+### ✅ Fitur Wajib Paket Ini
+* Autentikasi (Admin, Kasir, Pelanggan) dengan Breeze/UI
+* CRUD Jenis Layanan (Cuci Reguler, Cuci Express, Dry Clean, Setrika Saja) dengan harga/kg dan durasi hari
+* CRUD Pelanggan (nama, alamat, no HP)
+* Form Terima Order: pilih pelanggan, tambah multi-item (layanan + berat)
+* Dashboard status: Diterima -> Dicuci -> Dikeringkan -> Disetrika -> Siap Diambil -> Selesai
+* Halaman ubah status dengan log history (siapa, kapan mengubah)
+* Cetak nota order (PDF) dengan total dan estimasi selesai
+* Laporan pendapatan harian & bulanan (export Excel)
+* Riwayat order per pelanggan
+
+### 💧 Tantangan Unik Paket Ini
+> **Penting:** Tantangan di bawah ini adalah poin penilaian UTAMA paket ini. Jika tidak diimplementasikan, fitur dianggap dasar dan tidak mendapat nilai maksimal pada aspek 'Logika Bisnis & Tantangan'.
+
+50. Kalkulasi total: untuk setiap item -> `harga_per_kg x berat`; total order = sum subtotal
+51. Estimasi tanggal selesai = `tanggal_terima + max(durasi_hari)` dari semua item layanan (bukan sum!)
+52. Layanan Express memiliki biaya tambahan 50% dari harga normal
+53. Status workflow harus urut: tidak bisa 'Siap Diambil' sebelum 'Disetrika'
+54. Setiap perubahan status harus dicatat di tabel `status_histories` (siapa mengubah, waktu, status lama, status baru)
+55. Kirim email notifikasi saat status berubah menjadi 'Siap Diambil' (gunakan `Mail::to` atau queue)
+56. Pelanggan hanya bisa lihat riwayat order miliknya, dengan search by kode order
+
+### 🗄️ Spesifikasi DDL MySQL (Wajib Diikuti)
+Struktur tabel minimal berikut WAJIB ada di database. Anda boleh menambah kolom/tabel tambahan sesuai kebutuhan fitur, tetapi tidak boleh mengurangi atau mengubah nama/tipe kolom yang sudah didefinisikan. Migration Laravel harus mencerminkan struktur ini.
 # 🧺 CleanPro — Laundry Management System
 
 **Pemrograman Web II (CPMK-02 Project)**
@@ -271,6 +303,78 @@ CleanPro demonstrates a complete Laravel full-stack implementation, combining ba
 ---
 
 ✨ *Built with Laravel & determination*
+
+database:
+CREATE TABLE users (
+    id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(150) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('admin','kasir','pelanggan') DEFAULT 'pelanggan',
+    email_verified_at TIMESTAMP NULL,
+    remember_token VARCHAR(100) NULL,
+    created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL
+);
+
+CREATE TABLE customers (
+    id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT UNSIGNED UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    address TEXT,
+    created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE services (
+    id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(80) NOT NULL,
+    price_per_kg DECIMAL(10,2) NOT NULL,
+    duration_days INT UNSIGNED DEFAULT 2,
+    is_express BOOLEAN DEFAULT FALSE,
+    description TEXT,
+    created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL
+);
+
+CREATE TABLE orders (
+    id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    order_code VARCHAR(20) UNIQUE NOT NULL,
+    customer_id BIGINT UNSIGNED NOT NULL,
+    received_by BIGINT UNSIGNED NOT NULL,
+    received_at DATE NOT NULL,
+    estimated_finish_date DATE NOT NULL,
+    total_weight DECIMAL(8,2) NOT NULL,
+    total_amount DECIMAL(12,2) NOT NULL,
+    status ENUM('diterima','dicuci','dikeringkan','disetrika','siap_diambil','selesai') 
+DEFAULT 'diterima',
+    notes TEXT,
+    created_at TIMESTAMP NULL, updated_at TIMESTAMP NULL,
+    FOREIGN KEY (customer_id) REFERENCES customers(id),
+    FOREIGN KEY (received_by) REFERENCES users(id)
+);
+
+CREATE TABLE order_items (
+    id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    order_id BIGINT UNSIGNED NOT NULL,
+    service_id BIGINT UNSIGNED NOT NULL,
+    weight DECIMAL(8,2) NOT NULL,
+    price_per_kg DECIMAL(10,2) NOT NULL,
+    subtotal DECIMAL(12,2) NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    FOREIGN KEY (service_id) REFERENCES services(id)
+);
+
+CREATE TABLE status_histories (
+    id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    order_id BIGINT UNSIGNED NOT NULL,
+    old_status VARCHAR(30),
+    new_status VARCHAR(30) NOT NULL,
+    changed_by BIGINT UNSIGNED NOT NULL,
+    notes TEXT,
+    created_at TIMESTAMP NULL,
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    FOREIGN KEY (changed_by) REFERENCES users(id)
+);
 
 🎯 ROADMAP CHECKPOINT VERSI NILAI MAKSIMAL
 ✅ CHECKPOINT 1 — Setup Project + DB

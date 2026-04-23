@@ -13,8 +13,10 @@ return new class extends Migration
     {
         Schema::create('services', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name', 80);
             $table->decimal('price_per_kg', 10, 2);
+            $table->unsignedInteger('duration_days')->default(2);
+            $table->boolean('is_express')->default(false);
             $table->text('description')->nullable();
             $table->timestamps();
         });

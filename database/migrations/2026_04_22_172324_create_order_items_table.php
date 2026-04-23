@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('order_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('order_id')->constrained('orders')->cascadeOnDelete();
-            $table->foreignId('service_id')->constrained('services')->cascadeOnDelete();
-            $table->decimal('weight', 8, 2); // berat dalam kg
-            $table->decimal('price_per_kg', 10, 2); // snapshot harga saat order
-            $table->decimal('subtotal', 12, 2); // weight * price_per_kg
+            $table->foreignId('service_id')->constrained('services');
+            $table->decimal('weight', 8, 2);
+            $table->decimal('price_per_kg', 10, 2);
+            $table->decimal('subtotal', 12, 2);
             $table->timestamps();
         });
     }

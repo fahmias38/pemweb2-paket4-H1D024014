@@ -13,16 +13,15 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('customer_id')->constrained('customers')->cascadeOnDelete();
-            $table->foreignId('kasir_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->enum('status', [
-                'Diterima', 'Dicuci', 'Dikeringkan', 'Disetrika', 'Siap Diambil', 'Selesai'
-            ])->default('Diterima');
-            $table->decimal('total_weight', 8, 2)->default(0);
-            $table->decimal('total_price', 12, 2)->default(0);
-            $table->enum('payment_status', ['pending', 'paid'])->default('pending');
+            $table->string('order_code', 20)->unique();
+            $table->foreignId('customer_id')->constrained('customers');
+            $table->foreignId('received_by')->constrained('users');
+            $table->date('received_at');
+            $table->date('estimated_finish_date');
+            $table->decimal('total_weight', 8, 2);
+            $table->decimal('total_amount', 12, 2);
+            $table->enum('status', ['diterima', 'dicuci', 'dikeringkan', 'disetrika', 'siap_diambil', 'selesai'])->default('diterima');
             $table->text('notes')->nullable();
-            $table->string('proof')->nullable(); // file upload bukti pembayaran
             $table->timestamps();
         });
     }
