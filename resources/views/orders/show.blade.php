@@ -25,6 +25,13 @@
                             <p><strong>Total Weight:</strong> {{ $order->total_weight }} Kg</p>
                             <p><strong>Total Amount:</strong> Rp {{ number_format($order->total_amount, 0, ',', '.') }}</p>
                             <p><strong>Notes:</strong> {{ $order->notes ?? '-' }}</p>
+                            <p><strong>Bukti Pembayaran:</strong> 
+                                @if($order->payment_proof)
+                                    <a href="{{ asset('storage/' . $order->payment_proof) }}" target="_blank" class="text-blue-600 hover:text-blue-800 underline">Lihat File</a>
+                                @else
+                                    -
+                                @endif
+                            </p>
                         </div>
                     </div>
                 </div>

@@ -9,7 +9,7 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
-                    <form action="{{ route('orders.update', $order) }}" method="POST">
+                    <form action="{{ route('orders.update', $order) }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
                         <div class="mb-4">
@@ -149,6 +149,17 @@
                             </select>
                             <p class="text-xs text-gray-500 mt-1">Status harus berjalan sesuai urutan.</p>
                             @error('status') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="payment_proof" class="block text-sm font-medium text-gray-700">Bukti Pembayaran / Foto Item (Opsional)</label>
+                            @if($order->payment_proof)
+                                <div class="mb-2">
+                                    <a href="{{ asset('storage/' . $order->payment_proof) }}" target="_blank" class="text-blue-500 underline text-sm">Lihat Bukti Saat Ini</a>
+                                </div>
+                            @endif
+                            <input type="file" name="payment_proof" id="payment_proof" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                            @error('payment_proof') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                         </div>
 
                         <div class="mb-4">

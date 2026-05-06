@@ -52,7 +52,13 @@ class OrderController extends Controller
             'items' => 'required|array|min:1',
             'items.*.service_id' => 'required|exists:services,id',
             'items.*.weight' => 'required|numeric|min:0.1',
+            'payment_proof' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
+
+        $payment_proof_path = null;
+        if ($request->hasFile('payment_proof')) {
+            $payment_proof_path = $request->file('payment_proof')->store('payment_proofs', 'public');
+        }
 
         $total_weight = 0;
         $total_amount = 0;
@@ -90,6 +96,7 @@ class OrderController extends Controller
             'total_amount' => $total_amount,
             'status' => $validated['status'],
             'notes' => $validated['notes'],
+            'payment_proof' => $payment_proof_path,
         ]);
 
         $order->items()->saveMany($order_items);
@@ -132,9 +139,18 @@ class OrderController extends Controller
             'items' => 'required|array|min:1',
             'items.*.service_id' => 'required|exists:services,id',
             'items.*.weight' => 'required|numeric|min:0.1',
+            'payment_proof' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ], [
             'status.in' => 'Peralihan status tidak valid. Anda harus mengikuti urutan workflow.',
         ]);
+
+        $payment_proof_path = $order->payment_proof;
+        if ($request->hasFile('payment_proof')) {
+            if ($payment_proof_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($payment_proof_path)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($payment_proof_path);
+            }
+            $payment_proof_path = $request->file('payment_proof')->store('payment_proofs', 'public');
+        }
 
         $total_weight = 0;
         $total_amount = 0;
@@ -174,6 +190,7 @@ class OrderController extends Controller
             'total_amount' => $total_amount,
             'status' => $new_status,
             'notes' => $validated['notes'],
+            'payment_proof' => $payment_proof_path,
         ]);
 
         $order->items()->delete();
