@@ -19,7 +19,19 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
+        $user = auth()->user();
         $query = Order::with(['customer', 'receivedBy']);
+
+        // Jika role pelanggan, hanya tampilkan order miliknya sendiri
+        if ($user->role === 'pelanggan') {
+            $customer = Customer::where('user_id', $user->id)->first();
+            if ($customer) {
+                $query->where('customer_id', $customer->id);
+            } else {
+                // Tidak punya data pelanggan terdaftar, tampilkan kosong
+                $query->whereRaw('0 = 1');
+            }
+        }
 
         if ($request->filled('search')) {
             $query->where('order_code', 'like', "%{$request->search}%");
@@ -114,6 +126,14 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
+        // Pelanggan hanya boleh lihat order miliknya sendiri
+        if (auth()->user()->role === 'pelanggan') {
+            $customer = Customer::where('user_id', auth()->id())->first();
+            if (!$customer || $order->customer_id !== $customer->id) {
+                abort(403, 'Anda tidak diizinkan melihat order ini.');
+            }
+        }
+
         $order->load(['customer', 'receivedBy', 'items.service', 'histories.changedBy']);
         return view('orders.show', compact('order'));
     }
