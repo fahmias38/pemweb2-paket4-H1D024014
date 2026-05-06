@@ -19,7 +19,18 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
-        $orders = Order::with(['customer', 'receivedBy'])->latest()->paginate(10);
+        $query = Order::with(['customer', 'receivedBy']);
+
+        if ($request->filled('search')) {
+            $query->where('order_code', 'like', "%{$request->search}%");
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $orders = $query->latest()->paginate(10)->withQueryString();
+        
         return view('orders.index', compact('orders'));
     }
 

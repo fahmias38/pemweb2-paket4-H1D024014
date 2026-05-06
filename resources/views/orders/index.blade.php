@@ -16,11 +16,24 @@
                         @endif
                     </div>
 
-                    <!-- Search Form -->
+                    <!-- Search and Filter Form -->
                     <form action="{{ route('orders.index') }}" method="GET" class="mb-4">
                         <div class="flex space-x-2">
-                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by Order Code" class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                            <button type="submit" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">Search</button>
+                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by Order Code" class="w-1/3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            
+                            <select name="status" class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="">All Statuses</option>
+                                @foreach(['diterima', 'dicuci', 'dikeringkan', 'disetrika', 'siap_diambil', 'selesai'] as $status)
+                                    <option value="{{ $status }}" {{ request('status') == $status ? 'selected' : '' }}>
+                                        {{ strtoupper(str_replace('_', ' ', $status)) }}
+                                    </option>
+                                @endforeach
+                            </select>
+
+                            <button type="submit" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">Filter</button>
+                            @if(request('search') || request('status'))
+                                <a href="{{ route('orders.index') }}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">Clear</a>
+                            @endif
                         </div>
                     </form>
 

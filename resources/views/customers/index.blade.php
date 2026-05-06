@@ -14,6 +14,17 @@
                         <a href="{{ route('customers.create') }}" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Add Customer</a>
                     </div>
 
+                    <!-- Search Form -->
+                    <form action="{{ route('customers.index') }}" method="GET" class="mb-4">
+                        <div class="flex space-x-2">
+                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name or phone..." class="w-1/3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <button type="submit" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">Search</button>
+                            @if(request('search'))
+                                <a href="{{ route('customers.index') }}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">Clear</a>
+                            @endif
+                        </div>
+                    </form>
+
                     @if(session('success'))
                         <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
                             {{ session('success') }}
