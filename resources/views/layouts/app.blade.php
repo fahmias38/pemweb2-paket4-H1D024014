@@ -29,6 +29,27 @@
 
             <!-- Page Content -->
             <main>
+                @if(session('error'))
+                    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mt-4">
+                        <div class="p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                            {{ session('error') }}
+                        </div>
+                    </div>
+                @endif
+                
+                @if($errors->any())
+                    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mt-4">
+                        <div class="p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                            <strong>Whoops! Something went wrong.</strong>
+                            <ul class="list-disc pl-5 mt-2">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                @endif
+
                 {{ $slot }}
             </main>
         </div>
