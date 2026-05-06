@@ -30,6 +30,7 @@ Route::middleware('auth')->group(function () {
         Route::get('orders/{order}/edit', [OrderController::class, 'edit'])->name('orders.edit');
         Route::put('orders/{order}', [OrderController::class, 'update'])->name('orders.update');
         Route::delete('orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
+        Route::get('orders/{order}/nota', [OrderController::class, 'nota'])->name('orders.nota');
     });
 
     // Orders index & show accessible by all, but filtered in controller based on role

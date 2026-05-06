@@ -219,4 +219,10 @@ class OrderController extends Controller
         $order->delete();
         return redirect()->route('orders.index')->with('success', 'Order deleted successfully.');
     }
+
+    public function nota(Order $order)
+    {
+        $order->load(['customer', 'receivedBy', 'items.service', 'histories.changedBy']);
+        return view('orders.nota', compact('order'));
+    }
 }
