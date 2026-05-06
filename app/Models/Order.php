@@ -42,4 +42,18 @@ class Order extends Model
     {
         return $this->hasMany(StatusHistory::class);
     }
+
+    public function getAllowedStatuses()
+    {
+        $transitions = [
+            'diterima' => ['diterima', 'dicuci'],
+            'dicuci' => ['dicuci', 'dikeringkan'],
+            'dikeringkan' => ['dikeringkan', 'disetrika'],
+            'disetrika' => ['disetrika', 'siap_diambil'],
+            'siap_diambil' => ['siap_diambil', 'selesai'],
+            'selesai' => ['selesai']
+        ];
+
+        return $transitions[$this->status] ?? [$this->status];
+    }
 }

@@ -64,6 +64,48 @@
                 </div>
             </div>
 
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
+                <div class="p-6 text-gray-900">
+                    <h3 class="text-lg font-bold mb-4 border-b pb-2">Status History</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white border border-gray-200">
+                            <thead>
+                                <tr class="bg-gray-100 border-b">
+                                    <th class="py-2 px-4 text-left">Waktu</th>
+                                    <th class="py-2 px-4 text-left">Status Lama</th>
+                                    <th class="py-2 px-4 text-left">Status Baru</th>
+                                    <th class="py-2 px-4 text-left">Diubah Oleh</th>
+                                    <th class="py-2 px-4 text-left">Catatan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($order->histories()->latest()->get() as $history)
+                                    <tr class="border-b">
+                                        <td class="py-2 px-4">{{ $history->created_at ? $history->created_at->format('d M Y H:i') : '-' }}</td>
+                                        <td class="py-2 px-4">
+                                            @if($history->old_status)
+                                                <span class="px-2 py-1 text-xs rounded bg-gray-200">{{ strtoupper(str_replace('_', ' ', $history->old_status)) }}</span>
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
+                                        <td class="py-2 px-4">
+                                            <span class="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800">{{ strtoupper(str_replace('_', ' ', $history->new_status)) }}</span>
+                                        </td>
+                                        <td class="py-2 px-4">{{ $history->changedBy->name ?? '-' }}</td>
+                                        <td class="py-2 px-4">{{ $history->notes ?? '-' }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="py-4 text-center text-gray-500">Belum ada riwayat status.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <div class="flex justify-end">
                 <a href="{{ route('orders.index') }}" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">Back to List</a>
             </div>

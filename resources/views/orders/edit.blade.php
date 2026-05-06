@@ -141,12 +141,13 @@
                         <div class="mb-4">
                             <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
                             <select name="status" id="status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
-                                @foreach(['diterima', 'dicuci', 'dikeringkan', 'disetrika', 'siap_diambil', 'selesai'] as $status)
+                                @foreach($order->getAllowedStatuses() as $status)
                                     <option value="{{ $status }}" {{ old('status', $order->status) == $status ? 'selected' : '' }}>
                                         {{ strtoupper(str_replace('_', ' ', $status)) }}
                                     </option>
                                 @endforeach
                             </select>
+                            <p class="text-xs text-gray-500 mt-1">Status harus berjalan sesuai urutan.</p>
                             @error('status') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                         </div>
 

@@ -94,12 +94,20 @@ class OrderController extends Controller
 
         $order->items()->saveMany($order_items);
 
+        StatusHistory::create([
+            'order_id' => $order->id,
+            'old_status' => null,
+            'new_status' => $order->status,
+            'changed_by' => auth()->id(),
+            'notes' => 'Order created',
+        ]);
+
         return redirect()->route('orders.index')->with('success', 'Order created successfully.');
     }
 
     public function show(Order $order)
     {
-        $order->load(['customer', 'receivedBy', 'items.service']);
+        $order->load(['customer', 'receivedBy', 'items.service', 'histories.changedBy']);
         return view('orders.show', compact('order'));
     }
 
@@ -113,15 +121,19 @@ class OrderController extends Controller
 
     public function update(Request $request, Order $order)
     {
+        $allowedStatuses = $order->getAllowedStatuses();
+
         $validated = $request->validate([
             'order_code' => 'required|string|max:20|unique:orders,order_code,' . $order->id,
             'customer_id' => 'required|exists:customers,id',
             'received_at' => 'required|date',
-            'status' => 'required|in:diterima,dicuci,dikeringkan,disetrika,siap_diambil,selesai',
+            'status' => 'required|in:' . implode(',', $allowedStatuses),
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.service_id' => 'required|exists:services,id',
             'items.*.weight' => 'required|numeric|min:0.1',
+        ], [
+            'status.in' => 'Peralihan status tidak valid. Anda harus mengikuti urutan workflow.',
         ]);
 
         $total_weight = 0;
@@ -150,6 +162,9 @@ class OrderController extends Controller
 
         $estimated_finish_date = Carbon::parse($validated['received_at'])->addDays($max_duration);
 
+        $old_status = $order->status;
+        $new_status = $validated['status'];
+
         $order->update([
             'order_code' => $validated['order_code'],
             'customer_id' => $validated['customer_id'],
@@ -157,12 +172,27 @@ class OrderController extends Controller
             'estimated_finish_date' => $estimated_finish_date,
             'total_weight' => $total_weight,
             'total_amount' => $total_amount,
-            'status' => $validated['status'],
+            'status' => $new_status,
             'notes' => $validated['notes'],
         ]);
 
         $order->items()->delete();
         $order->items()->saveMany($order_items);
+
+        if ($old_status !== $new_status) {
+            StatusHistory::create([
+                'order_id' => $order->id,
+                'old_status' => $old_status,
+                'new_status' => $new_status,
+                'changed_by' => auth()->id(),
+                'notes' => 'Status updated',
+            ]);
+            
+            // Checkpoint requirement 55 (Email Notifikasi) bisa diaktifkan nanti, atau minimal logika disiapkan:
+            // if ($new_status === 'siap_diambil') {
+            //     Mail::to($order->customer->user->email)->send(new OrderReadyMail($order));
+            // }
+        }
 
         return redirect()->route('orders.index')->with('success', 'Order updated successfully.');
     }
