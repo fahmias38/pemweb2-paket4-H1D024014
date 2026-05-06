@@ -37,7 +37,8 @@ class OrderController extends Controller
     public function create()
     {
         $customers = Customer::all();
-        return view('orders.create', compact('customers'));
+        $services = Service::all();
+        return view('orders.create', compact('customers', 'services'));
     }
 
     public function store(Request $request)
@@ -46,30 +47,68 @@ class OrderController extends Controller
             'order_code' => 'required|string|unique:orders,order_code|max:20',
             'customer_id' => 'required|exists:customers,id',
             'received_at' => 'required|date',
-            'estimated_finish_date' => 'required|date',
-            'total_weight' => 'required|numeric|min:0',
-            'total_amount' => 'required|numeric|min:0',
             'status' => 'required|in:diterima,dicuci,dikeringkan,disetrika,siap_diambil,selesai',
             'notes' => 'nullable|string',
+            'items' => 'required|array|min:1',
+            'items.*.service_id' => 'required|exists:services,id',
+            'items.*.weight' => 'required|numeric|min:0.1',
         ]);
 
-        $validated['received_by'] = auth()->id();
+        $total_weight = 0;
+        $total_amount = 0;
+        $max_duration = 0;
+        $order_items = [];
 
-        Order::create($validated);
+        foreach ($validated['items'] as $item) {
+            $service = Service::find($item['service_id']);
+            $price = $service->is_express ? $service->price_per_kg * 1.5 : $service->price_per_kg;
+            $subtotal = $item['weight'] * $price;
+            
+            $total_weight += $item['weight'];
+            $total_amount += $subtotal;
+            if ($service->duration_days > $max_duration) {
+                $max_duration = $service->duration_days;
+            }
+
+            $order_items[] = new OrderItem([
+                'service_id' => $service->id,
+                'weight' => $item['weight'],
+                'price_per_kg' => $price,
+                'subtotal' => $subtotal,
+            ]);
+        }
+
+        $estimated_finish_date = Carbon::parse($validated['received_at'])->addDays($max_duration);
+
+        $order = Order::create([
+            'order_code' => $validated['order_code'],
+            'customer_id' => $validated['customer_id'],
+            'received_by' => auth()->id(),
+            'received_at' => $validated['received_at'],
+            'estimated_finish_date' => $estimated_finish_date,
+            'total_weight' => $total_weight,
+            'total_amount' => $total_amount,
+            'status' => $validated['status'],
+            'notes' => $validated['notes'],
+        ]);
+
+        $order->items()->saveMany($order_items);
 
         return redirect()->route('orders.index')->with('success', 'Order created successfully.');
     }
 
     public function show(Order $order)
     {
-        $order->load(['customer', 'receivedBy']);
+        $order->load(['customer', 'receivedBy', 'items.service']);
         return view('orders.show', compact('order'));
     }
 
     public function edit(Order $order)
     {
+        $order->load('items');
         $customers = Customer::all();
-        return view('orders.edit', compact('order', 'customers'));
+        $services = Service::all();
+        return view('orders.edit', compact('order', 'customers', 'services'));
     }
 
     public function update(Request $request, Order $order)
@@ -78,14 +117,52 @@ class OrderController extends Controller
             'order_code' => 'required|string|max:20|unique:orders,order_code,' . $order->id,
             'customer_id' => 'required|exists:customers,id',
             'received_at' => 'required|date',
-            'estimated_finish_date' => 'required|date',
-            'total_weight' => 'required|numeric|min:0',
-            'total_amount' => 'required|numeric|min:0',
             'status' => 'required|in:diterima,dicuci,dikeringkan,disetrika,siap_diambil,selesai',
             'notes' => 'nullable|string',
+            'items' => 'required|array|min:1',
+            'items.*.service_id' => 'required|exists:services,id',
+            'items.*.weight' => 'required|numeric|min:0.1',
         ]);
 
-        $order->update($validated);
+        $total_weight = 0;
+        $total_amount = 0;
+        $max_duration = 0;
+        $order_items = [];
+
+        foreach ($validated['items'] as $item) {
+            $service = Service::find($item['service_id']);
+            $price = $service->is_express ? $service->price_per_kg * 1.5 : $service->price_per_kg;
+            $subtotal = $item['weight'] * $price;
+            
+            $total_weight += $item['weight'];
+            $total_amount += $subtotal;
+            if ($service->duration_days > $max_duration) {
+                $max_duration = $service->duration_days;
+            }
+
+            $order_items[] = new OrderItem([
+                'service_id' => $service->id,
+                'weight' => $item['weight'],
+                'price_per_kg' => $price,
+                'subtotal' => $subtotal,
+            ]);
+        }
+
+        $estimated_finish_date = Carbon::parse($validated['received_at'])->addDays($max_duration);
+
+        $order->update([
+            'order_code' => $validated['order_code'],
+            'customer_id' => $validated['customer_id'],
+            'received_at' => $validated['received_at'],
+            'estimated_finish_date' => $estimated_finish_date,
+            'total_weight' => $total_weight,
+            'total_amount' => $total_amount,
+            'status' => $validated['status'],
+            'notes' => $validated['notes'],
+        ]);
+
+        $order->items()->delete();
+        $order->items()->saveMany($order_items);
 
         return redirect()->route('orders.index')->with('success', 'Order updated successfully.');
     }

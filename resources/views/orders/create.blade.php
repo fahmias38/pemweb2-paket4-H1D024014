@@ -30,31 +30,96 @@
                             @error('customer_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                         </div>
 
-                        <div class="grid grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label for="received_at" class="block text-sm font-medium text-gray-700">Received At</label>
-                                <input type="date" name="received_at" id="received_at" value="{{ old('received_at', \Carbon\Carbon::now()->format('Y-m-d')) }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
-                                @error('received_at') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                            </div>
-                            <div>
-                                <label for="estimated_finish_date" class="block text-sm font-medium text-gray-700">Estimated Finish</label>
-                                <input type="date" name="estimated_finish_date" id="estimated_finish_date" value="{{ old('estimated_finish_date') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
-                                @error('estimated_finish_date') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                            </div>
+                        <div class="mb-4">
+                            <label for="received_at" class="block text-sm font-medium text-gray-700">Received At</label>
+                            <input type="date" name="received_at" id="received_at" value="{{ old('received_at', \Carbon\Carbon::now()->format('Y-m-d')) }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                            @error('received_at') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                         </div>
 
-                        <div class="grid grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label for="total_weight" class="block text-sm font-medium text-gray-700">Total Weight (Kg)</label>
-                                <input type="number" step="0.1" name="total_weight" id="total_weight" value="{{ old('total_weight', 0) }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
-                                @error('total_weight') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        <div class="mb-4 p-4 border rounded bg-gray-50">
+                            <h4 class="font-bold mb-2">Order Items</h4>
+                            <div id="items-container">
+                                @if(old('items'))
+                                    @foreach(old('items') as $index => $item)
+                                        <div class="item-row flex space-x-2 mb-2">
+                                            <select name="items[{{ $index }}][service_id]" required class="w-2/3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                                <option value="">Select Service</option>
+                                                @foreach($services as $service)
+                                                    <option value="{{ $service->id }}" {{ $item['service_id'] == $service->id ? 'selected' : '' }}>
+                                                        {{ $service->name }} (Rp {{ number_format($service->is_express ? $service->price_per_kg * 1.5 : $service->price_per_kg, 0, ',', '.') }}/kg)
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            <input type="number" step="0.1" name="items[{{ $index }}][weight]" value="{{ $item['weight'] }}" placeholder="Weight (Kg)" required class="w-1/3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                            <button type="button" class="remove-item px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600">X</button>
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <div class="item-row flex space-x-2 mb-2">
+                                        <select name="items[0][service_id]" required class="w-2/3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                            <option value="">Select Service</option>
+                                            @foreach($services as $service)
+                                                <option value="{{ $service->id }}">
+                                                    {{ $service->name }} (Rp {{ number_format($service->is_express ? $service->price_per_kg * 1.5 : $service->price_per_kg, 0, ',', '.') }}/kg)
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <input type="number" step="0.1" name="items[0][weight]" placeholder="Weight (Kg)" required class="w-1/3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                        <button type="button" class="remove-item px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600" style="display: none;">X</button>
+                                    </div>
+                                @endif
                             </div>
-                            <div>
-                                <label for="total_amount" class="block text-sm font-medium text-gray-700">Total Amount (Rp)</label>
-                                <input type="number" step="0.01" name="total_amount" id="total_amount" value="{{ old('total_amount', 0) }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
-                                @error('total_amount') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                            </div>
+                            <button type="button" id="add-item" class="mt-2 px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 text-sm">+ Add Item</button>
+                            @error('items') <span class="text-red-500 text-sm block mt-1">{{ $message }}</span> @enderror
                         </div>
+
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                let itemIndex = {{ old('items') ? count(old('items')) : 1 }};
+                                const container = document.getElementById('items-container');
+                                const addButton = document.getElementById('add-item');
+
+                                addButton.addEventListener('click', function() {
+                                    const row = document.createElement('div');
+                                    row.className = 'item-row flex space-x-2 mb-2';
+                                    row.innerHTML = `
+                                        <select name="items[${itemIndex}][service_id]" required class="w-2/3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                            <option value="">Select Service</option>
+                                            @foreach($services as $service)
+                                                <option value="{{ $service->id }}">
+                                                    {{ $service->name }} (Rp {{ number_format($service->is_express ? $service->price_per_kg * 1.5 : $service->price_per_kg, 0, ',', '.') }}/kg)
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <input type="number" step="0.1" name="items[${itemIndex}][weight]" placeholder="Weight (Kg)" required class="w-1/3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                        <button type="button" class="remove-item px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600">X</button>
+                                    `;
+                                    container.appendChild(row);
+                                    itemIndex++;
+                                    updateRemoveButtons();
+                                });
+
+                                container.addEventListener('click', function(e) {
+                                    if (e.target.classList.contains('remove-item')) {
+                                        e.target.closest('.item-row').remove();
+                                        updateRemoveButtons();
+                                    }
+                                });
+
+                                function updateRemoveButtons() {
+                                    const rows = container.querySelectorAll('.item-row');
+                                    rows.forEach((row, index) => {
+                                        const btn = row.querySelector('.remove-item');
+                                        if (rows.length === 1) {
+                                            btn.style.display = 'none';
+                                        } else {
+                                            btn.style.display = 'block';
+                                        }
+                                    });
+                                }
+                                updateRemoveButtons();
+                            });
+                        </script>
 
                         <div class="mb-4">
                             <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
